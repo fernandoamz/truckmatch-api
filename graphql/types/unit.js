@@ -1,7 +1,7 @@
 const { GraphQLObjectType, GraphQLID, GraphQLString } = require('graphql');
 
 const UnitType = new GraphQLObjectType({
-  name: 'Unit',
+  name: 'unit',
   fields: () => ({
     id: { type: GraphQLID },
     plateNumber: { type: GraphQLString },

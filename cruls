@@ -1,0 +1,73 @@
+1. Registro de usuario (REST)
+curl -X POST http://localhost:5000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email":"demo1@tm.com",
+    "password":"Secreta123",
+    "role":"driver"
+  }'
+
+
+👉 Respuesta esperada:
+
+{
+  "user": { "id": "...", "email": "demo@tm.com", "role": "driver" },
+  "accessToken": "...",
+  "refreshToken": "..."
+}
+
+2. Login de usuario (REST)
+curl -X POST http://localhost:5000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email":"demo@tm.com",
+    "password":"Secreta123"
+  }'
+
+
+👉 Obtendrás de nuevo un accessToken y refreshToken.
+
+3. Usar /auth/me para obtener perfil (REST protegido con JWT)
+
+Copia tu accessToken y prueba:
+
+curl -X GET http://localhost:5000/auth/me \
+  -H "Authorization: Bearer TU_ACCESS_TOKEN"
+
+4. Crear una unidad (GraphQL mutation protegida)
+curl -X POST http://localhost:5000/graphql \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_ACCESS_TOKEN" \
+  -d '{
+    "query": "mutation { registerUnit(plateNumber:\"ABC-123\", model:\"Freightliner\") { id plateNumber model userId } }"
+  }'
+
+
+👉 Debes recibir algo como:
+
+{
+  "data": {
+    "registerUnit": {
+      "id": "uuid",
+      "plateNumber": "ABC-123",
+      "model": "Freightliner",
+      "userId": "uuid_del_usuario"
+    }
+  }
+}
+
+5. Consultar tu usuario en GraphQL (query protegida)
+curl -X POST http://localhost:5000/graphql \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_ACCESS_TOKEN" \
+  -d '{
+    "query": "query { me { id email role } }"
+  }'
+
+6. Refrescar el token (REST)
+curl -X POST http://localhost:5000/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refreshToken": "TU_REFRESH_TOKEN"
+  }'
+  

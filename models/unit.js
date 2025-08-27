@@ -1,3 +1,4 @@
+// models/unit.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const User = require('./user');
@@ -16,6 +17,9 @@ const Unit = sequelize.define('Unit', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+}, {
+  tableName: 'units',
+  timestamps: true,
 });
 
 Unit.belongsTo(User, { foreignKey: 'userId' });
