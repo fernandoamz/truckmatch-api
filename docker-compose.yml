@@ -1,43 +1,116 @@
 # docker-compose.yml
-version: '3.8'
-
 services:
-  truckmatch-api:
-    build: .
-    ports:
-      - "5001:5000"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/truckmatch
-      - JWT_SECRET=your-super-secret-jwt-key
-      - PORT=5000
-    depends_on:
-      - postgres
-    volumes:
-      - .:/app
-      - /app/node_modules
-    command: npm run dev
-
+  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
+    container_name: truckmatch-postgres
+    restart: unless-stopped
     environment:
-      - POSTGRES_DB=truckmatch
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      POSTGRES_DB: truckmatch_db
+      POSTGRES_USER: truckmatch_user
+      POSTGRES_PASSWORD: truckmatch_pass_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - truckmatch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U truckmatch_user -d truckmatch_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  pgadmin:
-    image: dpage/pgadmin4
+  # TruckMatch API
+  truckmatch-api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: truckmatch-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@truckmatch.com
-      - PGADMIN_DEFAULT_PASSWORD=admin123
+      NODE_ENV: production
+      DATABASE_URL: postgresql://truckmatch_user:truckmatch_pass_2024@postgres:5432/truckmatch_db
+      JWT_SECRET: truckmatch-super-secret-jwt-key-2024-production
+      PORT: 5000
+      MAX_FILE_SIZE: 5242880
+      UPLOAD_PATH: ./uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+      - logs_data:/app/logs
+    networks:
+      - truckmatch-network
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development API (for dev mode)
+  truckmatch-api-dev:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: truckmatch-api-dev
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://truckmatch_user:truckmatch_pass_2024@postgres:5432/truckmatch_db
+      JWT_SECRET: truckmatch-dev-secret-key
+      PORT: 5000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - uploads_data:/app/uploads
+    networks:
+      - truckmatch-network
+    command: npm run dev
+    profiles:
+      - dev
+
+  # pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: truckmatch-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@truckmatch.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
       - "8080:80"
     depends_on:
       - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - truckmatch-network
+    profiles:
+      - tools
+
+networks:
+  truckmatch-network:
+    driver: bridge
 
 volumes:
   postgres_data:
+    driver: local
+  uploads_data:
+    driver: local
+  logs_data:
+    driver: local
+  pgadmin_data:
+    driver: local

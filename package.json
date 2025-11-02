@@ -3,12 +3,18 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js",
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "migrate": "npx sequelize-cli db:migrate",
+    "seed": "node seeders/demo-data.js",
+    "seed:demo": "node seeders/demo-data.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docker:build": "docker build -t fernandoamz/truckmatch-api .",
-    "docker:run": "docker run -p 5000:5000 fernandoamz/truckmatch-api",
-    "docker:compose": "docker-compose up -d",
+    "docker:build": "docker-compose build",
+    "docker:dev": "docker-compose --profile dev up -d",
+    "docker:prod": "docker-compose up -d truckmatch-api postgres",
+    "docker:stop": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:clean": "docker-compose down -v --remove-orphans",
     "k8s:deploy": "bash scripts/deploy-k8s.sh",
     "k8s:build-push": "bash scripts/build-and-push.sh"
   },
@@ -23,10 +29,17 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "express-graphql": "^0.12.0",
-    "graphql": "^16.11.0",
+    "express-validator": "^7.0.1",
+    "graphql": "^15.10.1",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
     "pg": "^8.16.3",
     "sequelize": "^6.37.7",
-    "sequelize-cli": "^6.6.3"
+    "sequelize-cli": "^6.6.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }

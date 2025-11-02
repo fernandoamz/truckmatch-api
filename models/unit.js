@@ -1,9 +1,10 @@
 // models/unit.js
-const { DataTypes } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
 const sequelize = require('../config/db');
-const User = require('./user');
 
-const Unit = sequelize.define('Unit', {
+class Unit extends Model {}
+
+Unit.init({
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -12,17 +13,71 @@ const Unit = sequelize.define('Unit', {
   plateNumber: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true,
+    validate: {
+      notEmpty: true,
+    },
   },
   model: {
     type: DataTypes.STRING,
     allowNull: false,
+    validate: {
+      notEmpty: true,
+    },
+  },
+  type: {
+    type: DataTypes.ENUM('truck', 'trailer', 'van', 'pickup'),
+    allowNull: false,
+    defaultValue: 'truck',
+  },
+  capacity: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    validate: {
+      min: 0.1,
+    },
+  },
+  capacityUnit: {
+    type: DataTypes.ENUM('tons', 'kg', 'm3'),
+    allowNull: false,
+    defaultValue: 'tons',
+  },
+  status: {
+    type: DataTypes.ENUM('active', 'inactive', 'maintenance', 'assigned'),
+    allowNull: false,
+    defaultValue: 'active',
+  },
+  year: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: {
+      min: 1980,
+      max: new Date().getFullYear() + 1,
+    },
+  },
+  brand: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  driverId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'drivers',
+      key: 'id',
+    },
   },
 }, {
+  sequelize,
+  modelName: 'Unit',
   tableName: 'units',
   timestamps: true,
+  indexes: [
+    {
+      unique: true,
+      fields: ['plateNumber']
+    }
+  ]
 });
-
-Unit.belongsTo(User, { foreignKey: 'userId' });
-User.hasMany(Unit, { foreignKey: 'userId' });
 
 module.exports = Unit;

@@ -1,0 +1,2 @@
+# Keep this directory in git
+# Files uploaded here will be stored as Docker volumes in production

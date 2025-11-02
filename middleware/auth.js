@@ -1,5 +1,6 @@
 // middleware/auth.js
 const jwt = require('jsonwebtoken');
+const { User } = require('../models');
 require('dotenv').config();
 
 const getTokenFromHeader = (req) => {
@@ -9,29 +10,77 @@ const getTokenFromHeader = (req) => {
   return null;
 };
 
-const authenticateToken = (req, res, next) => {
-  const token = getTokenFromHeader(req);
-  if (!token) return res.status(401).json({ message: 'Token requerido' });
+const authenticateToken = async (req, res, next) => {
+  try {
+    const token = getTokenFromHeader(req);
+    if (!token) {
+      return res.error('Access token required', 401);
+    }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: 'Token inválido' });
-    req.user = user; // { userId, role, iat, exp }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Verify user still exists
+    const user = await User.findByPk(decoded.userId);
+    if (!user) {
+      return res.error('User not found', 401);
+    }
+
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    };
+    
     next();
-  });
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return res.error('Invalid token', 401);
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.error('Token expired', 401);
+    }
+    next(error);
+  }
 };
 
-const attachUserFromAuthHeader = (req, _res, next) => {
-  const token = getTokenFromHeader(req);
-  if (!token) return next();
+const attachUserFromAuthHeader = async (req, res, next) => {
   try {
-    const user = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = user;
-  } catch (_) {
-    // token inválido => seguimos sin usuario
+    const token = getTokenFromHeader(req);
+    if (!token) return next();
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(decoded.userId);
+    
+    if (user) {
+      req.user = {
+        id: user.id,
+        email: user.email,
+        role: user.role
+      };
+    }
+  } catch (error) {
+    // Silent fail - continue without user
   }
   next();
 };
 
-module.exports = authenticateToken;
-module.exports.getTokenFromHeader = getTokenFromHeader;
-module.exports.attachUserFromAuthHeader = attachUserFromAuthHeader;
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.error('Authentication required', 401);
+    }
+    
+    if (roles.length && !roles.includes(req.user.role)) {
+      return res.error('Insufficient permissions', 403);
+    }
+    
+    next();
+  };
+};
+
+module.exports = {
+  authenticateToken,
+  attachUserFromAuthHeader,
+  authorize,
+  getTokenFromHeader
+};

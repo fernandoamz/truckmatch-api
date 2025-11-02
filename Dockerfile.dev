@@ -1,0 +1,34 @@
+# Dockerfile.dev
+FROM node:18-alpine
+
+# Instalar dumb-init
+RUN apk add --no-cache dumb-init
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Crear directorios necesarios
+RUN mkdir -p uploads/documents
+
+# Copiar archivos de dependencias
+COPY package*.json ./
+
+# Instalar todas las dependencias (incluyendo devDependencies)
+RUN npm install && npm cache clean --force
+
+# Crear usuario no-root para seguridad
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Cambiar permisos
+RUN chown -R nodejs:nodejs /app
+
+# Cambiar a usuario no-root
+USER nodejs
+
+# Exponer puerto
+EXPOSE 5000
+
+# Comando de desarrollo
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["npm", "run", "dev"]

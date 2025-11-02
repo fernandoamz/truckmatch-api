@@ -1,15 +1,75 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Authentication
+ *   description: Endpoints de autenticación y gestión de usuarios
+ */
+
 // routes/auth.js
 const express = require('express');
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const { createAccessToken, createRefreshToken, verifyToken } = require('../utils/token');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
 // En producción: guarda refresh tokens en DB o Redis
 const REFRESH_TOKENS = new Set();
 
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Registrar nuevo usuario
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - role
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "usuario@ejemplo.com"
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 example: "password123"
+ *               role:
+ *                 type: string
+ *                 enum: [driver, employer]
+ *                 example: "employer"
+ *     responses:
+ *       201:
+ *         description: Usuario registrado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 accessToken:
+ *                   type: string
+ *                   description: Token de acceso JWT
+ *                 refreshToken:
+ *                   type: string
+ *                   description: Token de actualización
+ *       400:
+ *         description: Datos incompletos
+ *       409:
+ *         description: Email ya registrado
+ *       500:
+ *         description: Error interno del servidor
+ */
 // Registro
 router.post('/register', async (req, res) => {
   try {
@@ -37,6 +97,53 @@ router.post('/register', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Iniciar sesión
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "client@truckmatch.com"
+ *               password:
+ *                 type: string
+ *                 example: "demo123"
+ *     responses:
+ *       200:
+ *         description: Login exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 accessToken:
+ *                   type: string
+ *                   description: Token de acceso JWT
+ *                 refreshToken:
+ *                   type: string
+ *                   description: Token de actualización
+ *       400:
+ *         description: Datos incompletos
+ *       401:
+ *         description: Credenciales inválidas
+ *       500:
+ *         description: Error interno del servidor
+ */
 // Login
 router.post('/login', async (req, res) => {
   try {
