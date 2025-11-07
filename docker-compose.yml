@@ -7,8 +7,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: truckmatch_db
-      POSTGRES_USER: truckmatch_user
-      POSTGRES_PASSWORD: truckmatch_pass_2024
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: toor
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
     ports:
       - "5432:5432"
@@ -18,7 +18,7 @@ services:
     networks:
       - truckmatch-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U truckmatch_user -d truckmatch_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d truckmatch_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,7 +34,7 @@ services:
       - "5000:5000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://truckmatch_user:truckmatch_pass_2024@postgres:5432/truckmatch_db
+      DATABASE_URL: postgresql://postgres:toor@postgres:5432/truckmatch_db
       JWT_SECRET: truckmatch-super-secret-jwt-key-2024-production
       PORT: 5000
       MAX_FILE_SIZE: 5242880
@@ -65,7 +65,7 @@ services:
       - "5001:5000"
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://truckmatch_user:truckmatch_pass_2024@postgres:5432/truckmatch_db
+      DATABASE_URL: postgresql://postgres:toor@postgres:5432/truckmatch_db
       JWT_SECRET: truckmatch-dev-secret-key
       PORT: 5000
     depends_on:
@@ -90,6 +90,9 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@truckmatch.com
       PGADMIN_DEFAULT_PASSWORD: admin123
       PGADMIN_CONFIG_SERVER_MODE: 'False'
+      # Pre-register the application Postgres server so pgAdmin shows it on first load
+      PGADMIN_DEFAULT_SERVERS: |
+        {"1": {"Name": "TruckMatch Postgres", "Group": "Servers", "Host": "postgres", "Port": 5432, "MaintenanceDB": "truckmatch_db", "Username": "truckmatch_user", "Password": "truckmatch_pass_2024", "SSLMode": "prefer"}}
     ports:
       - "8080:80"
     depends_on:
@@ -98,8 +101,7 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     networks:
       - truckmatch-network
-    profiles:
-      - tools
+    # Removed 'profiles: [tools]' so pgAdmin starts with the rest of the stack by default
 
 networks:
   truckmatch-network:

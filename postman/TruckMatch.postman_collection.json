@@ -1,0 +1,193 @@
+{
+  "info": {
+    "_postman_id": "truckmatch-collection-001",
+    "name": "TruckMatch API - Examples",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colección básica de ejemplo para probar los flujos principales: registro/login, crear orden, asignar, driver start/complete y upload document. Usa variables: {{baseUrl}} y {{accessToken}}."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "assignmentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 - Register Employer",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"client@truckmatch.com\",\n  \"password\": \"demo123\",\n  \"role\": \"employer\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth","register"] }
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Login (Employer) - save tokens",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"client@truckmatch.com\",\n  \"password\": \"demo123\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth","login"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if(json.accessToken){",
+              "  pm.collectionVariables.set('accessToken', json.accessToken);",
+              "}",
+              "if(json.refreshToken){",
+              "  pm.collectionVariables.set('refreshToken', json.refreshToken);",
+              "}",
+              "if(json.user && json.user.id){",
+              "  pm.collectionVariables.set('userId', json.user.id);",
+              "}",
+              "pm.test('Login returned accessToken', function(){ pm.expect(json.accessToken).to.exist; });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "03 - Create Order (Employer)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"origin\": {\n    \"address\": \"Warehouse Centro Logístico\",\n    \"city\": \"Ciudad de México\",\n    \"state\": \"CDMX\"\n  },\n  \"destination\": {\n    \"address\": \"Centro de Distribución Norte\",\n    \"city\": \"Monterrey\",\n    \"state\": \"Nuevo León\"\n  },\n  \"cargoDescription\": \"Productos electrónicos - manejo cuidadoso\",\n  \"cargoWeight\": 10.5,\n  \"cargoWeightUnit\": \"tons\",\n  \"pickupDate\": \"2025-11-15T08:00:00Z\",\n  \"deliveryDate\": \"2025-11-16T18:00:00Z\",\n  \"rate\": 15000.00,\n  \"currency\": \"MXN\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/orders", "host": ["{{baseUrl}}"], "path": ["api","orders"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if(json && json.id) pm.collectionVariables.set('orderId', json.id);",
+              "pm.test('Order created (201 or 200)', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - List Orders",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/orders", "host": ["{{baseUrl}}"], "path": ["api","orders"] }
+      }
+    },
+    {
+      "name": "05 - Register Driver (user)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"driver1@truckmatch.com\",\n  \"password\": \"driver123\",\n  \"role\": \"driver\"\n}" },
+        "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth","register"] }
+      }
+    },
+    {
+      "name": "06 - Login (Driver) - save token",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"driver1@truckmatch.com\",\n  \"password\": \"driver123\"\n}" },
+        "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth","login"] }
+      },
+      "event": [
+        { "listen": "test", "script": { "exec": ["var json = pm.response.json(); if(json.accessToken) pm.collectionVariables.set('accessToken', json.accessToken); pm.test('Driver login ok', function(){ pm.expect(json.accessToken).to.exist; });"] } }
+      ]
+    },
+    {
+      "name": "07 - Get Assignments (Driver)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/assignments", "host": ["{{baseUrl}}"], "path": ["api","assignments"] }
+      }
+    },
+    {
+      "name": "08 - Create Assignment (example)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"driverId\": \"<DRIVER_ID>\",\n  \"unitId\": \"<UNIT_ID>\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/assignments", "host": ["{{baseUrl}}"], "path": ["api","assignments"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if(json && json.id) pm.collectionVariables.set('assignmentId', json.id);",
+              "pm.test('Assignment created', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Start Assignment (Driver)",
+      "request": {
+        "method": "PATCH",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+        "body": { "mode": "raw", "raw": "{ \"status\": \"started\" }" },
+        "url": { "raw": "{{baseUrl}}/api/assignments/{{assignmentId}}", "host": ["{{baseUrl}}"], "path": ["api","assignments","{{assignmentId}}"] }
+      }
+    },
+    {
+      "name": "10 - Complete Assignment (Driver)",
+      "request": {
+        "method": "PATCH",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+        "body": { "mode": "raw", "raw": "{ \"status\": \"completed\" }" },
+        "url": { "raw": "{{baseUrl}}/api/assignments/{{assignmentId}}", "host": ["{{baseUrl}}"], "path": ["api","assignments","{{assignmentId}}"] }
+      }
+    },
+    {
+      "name": "11 - Upload Document (Driver)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "entityType", "value": "driver", "type": "text" },
+            { "key": "entityId", "value": "<DRIVER_ID>", "type": "text" },
+            { "key": "type", "value": "license", "type": "text" },
+            { "key": "expirationDate", "value": "2026-12-31", "type": "text" },
+            { "key": "document", "type": "file", "src": "" }
+          ]
+        },
+        "url": { "raw": "{{baseUrl}}/api/documents/upload", "host": ["{{baseUrl}}"], "path": ["api","documents","upload"] }
+      }
+    }
+  ]
+}
