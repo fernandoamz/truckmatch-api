@@ -8,6 +8,7 @@
     "migrate": "npx sequelize-cli db:migrate",
     "seed": "node seeders/demo-data.js",
     "seed:demo": "node seeders/demo-data.js",
+    "seed:clean": "node seeders/clean-data.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "docker:build": "docker-compose build",
     "docker:dev": "docker-compose --profile dev up -d",

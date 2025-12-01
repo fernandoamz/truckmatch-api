@@ -39,7 +39,7 @@ const seedDemoData = async () => {
         Driver.create({
           name: 'Juan Pérez',
           license: 'CDL-123456789',
-          licenseExpirationDate: new Date('2025-12-31'),
+          licenseExpirationDate: new Date('2026-12-31'),
           phone: '+52-555-0123',
           email: 'juan.perez@email.com',
           address: 'Av. Insurgentes 123, CDMX',
@@ -48,7 +48,7 @@ const seedDemoData = async () => {
         Driver.create({
           name: 'María González',
           license: 'CDL-987654321',
-          licenseExpirationDate: new Date('2025-06-30'),
+          licenseExpirationDate: new Date('2026-06-30'),
           phone: '+52-555-0456',
           email: 'maria.gonzalez@email.com',
           address: 'Calle Reforma 456, Guadalajara',
@@ -93,7 +93,7 @@ const seedDemoData = async () => {
           type: 'license',
           url: '/uploads/documents/demo-license-1.pdf',
           fileName: 'license-juan-perez.pdf',
-          expirationDate: new Date('2025-12-31'),
+          expirationDate: new Date('2026-12-31'),
           status: 'valid'
         }, { transaction }),
         Document.create({
@@ -102,7 +102,7 @@ const seedDemoData = async () => {
           type: 'medical_certificate',
           url: '/uploads/documents/demo-medical-1.pdf',
           fileName: 'medical-juan-perez.pdf',
-          expirationDate: new Date('2025-03-15'),
+          expirationDate: new Date('2026-03-15'),
           status: 'valid'
         }, { transaction }),
         // Driver 2 documents
@@ -112,7 +112,7 @@ const seedDemoData = async () => {
           type: 'license',
           url: '/uploads/documents/demo-license-2.pdf',
           fileName: 'license-maria-gonzalez.pdf',
-          expirationDate: new Date('2025-06-30'),
+          expirationDate: new Date('2026-06-30'),
           status: 'valid'
         }, { transaction }),
         Document.create({
@@ -121,7 +121,7 @@ const seedDemoData = async () => {
           type: 'medical_certificate',
           url: '/uploads/documents/demo-medical-2.pdf',
           fileName: 'medical-maria-gonzalez.pdf',
-          expirationDate: new Date('2025-01-20'),
+          expirationDate: new Date('2026-01-20'),
           status: 'valid'
         }, { transaction })
       ]);
@@ -135,7 +135,7 @@ const seedDemoData = async () => {
           type: 'registration',
           url: '/uploads/documents/demo-registration-1.pdf',
           fileName: 'registration-trk-001.pdf',
-          expirationDate: new Date('2025-08-15'),
+          expirationDate: new Date('2026-08-15'),
           status: 'valid'
         }, { transaction }),
         Document.create({
@@ -144,7 +144,7 @@ const seedDemoData = async () => {
           type: 'insurance',
           url: '/uploads/documents/demo-insurance-1.pdf',
           fileName: 'insurance-trk-001.pdf',
-          expirationDate: new Date('2025-04-30'),
+          expirationDate: new Date('2026-04-30'),
           status: 'valid'
         }, { transaction }),
         // Unit 2 documents
@@ -154,7 +154,7 @@ const seedDemoData = async () => {
           type: 'registration',
           url: '/uploads/documents/demo-registration-2.pdf',
           fileName: 'registration-trk-002.pdf',
-          expirationDate: new Date('2025-09-20'),
+          expirationDate: new Date('2026-09-20'),
           status: 'valid'
         }, { transaction }),
         Document.create({
@@ -163,14 +163,20 @@ const seedDemoData = async () => {
           type: 'insurance',
           url: '/uploads/documents/demo-insurance-2.pdf',
           fileName: 'insurance-trk-002.pdf',
-          expirationDate: new Date('2025-05-15'),
+          expirationDate: new Date('2026-05-15'),
           status: 'valid'
         }, { transaction })
       ]);
       console.log('✓ Created demo documents');
 
       // Create demo order
+      // Generate orderNumber manually to avoid validation issues
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const random = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+      const orderNumber = `ORD-${date}-${random}`;
+      
       const order1 = await Order.create({
+        orderNumber,
         origin: {
           address: 'Warehouse Centro Logístico',
           city: 'Ciudad de México',
@@ -199,8 +205,8 @@ const seedDemoData = async () => {
           'Unidad con sistema de monitoreo de temperatura',
           'Seguro de carga completo'
         ],
-        pickupDate: new Date('2024-11-15T08:00:00'),
-        deliveryDate: new Date('2024-11-16T18:00:00'),
+        pickupDate: new Date('2025-12-15T08:00:00'),
+        deliveryDate: new Date('2025-12-16T18:00:00'),
         rate: 25000.00,
         currency: 'MXN',
         clientId: demoClient.id,
