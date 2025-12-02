@@ -17,6 +17,7 @@ const unitRoutes = require('./routes/units');
 const documentRoutes = require('./routes/documents');
 const orderRoutes = require('./routes/orders');
 const assignmentRoutes = require('./routes/assignments');
+const tripRouteRoutes = require('./routes/trip-routes');
 
 // Import database
 const { sequelize, syncModels } = require('./models');
@@ -149,6 +150,15 @@ try {
   console.log('Mounted /api/assignments OK');
 } catch (e) {
   console.error('Error mounting /api/assignments:', e && e.stack ? e.stack : e);
+  throw e;
+}
+
+try {
+  console.log('Mounting /api/trip-routes routes');
+  app.use('/api/trip-routes', tripRouteRoutes);
+  console.log('Mounted /api/trip-routes OK');
+} catch (e) {
+  console.error('Error mounting /api/trip-routes:', e && e.stack ? e.stack : e);
   throw e;
 }
 

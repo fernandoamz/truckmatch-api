@@ -26,6 +26,22 @@ const cleanData = async () => {
       });
       console.log(`✓ Deleted ${deletedAssignments} assignments`);
 
+      // Delete trip route events first (references trip routes)
+      const deletedEvents = await require('../models').TripRouteEvent.destroy({ 
+        where: {},
+        truncate: false,
+        transaction 
+      });
+      console.log(`✓ Deleted ${deletedEvents} trip route events`);
+
+      // Delete trip routes (references orders, drivers, units)
+      const deletedTripRoutes = await require('../models').TripRoute.destroy({ 
+        where: {},
+        truncate: false,
+        transaction 
+      });
+      console.log(`✓ Deleted ${deletedTripRoutes} trip routes`);
+
       // Delete documents (references drivers and units)
       const deletedDocuments = await Document.destroy({ 
         where: {},
@@ -72,6 +88,8 @@ const cleanData = async () => {
       console.log('🎉 Database cleaned successfully!');
       console.log('\n📋 Cleanup Summary:');
       console.log(`   Assignments: ${deletedAssignments}`);
+      console.log(`   Trip Route Events: ${deletedEvents}`);
+      console.log(`   Trip Routes: ${deletedTripRoutes}`);
       console.log(`   Documents: ${deletedDocuments}`);
       console.log(`   Orders: ${deletedOrders}`);
       console.log(`   Units: ${deletedUnits}`);

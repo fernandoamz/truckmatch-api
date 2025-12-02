@@ -5,7 +5,9 @@ const {
   Driver, 
   Unit, 
   Document, 
-  Order, 
+  Order,
+  TripRoute,
+  TripRouteEvent,
   sequelize 
 } = require('../models');
 
@@ -216,6 +218,182 @@ const seedDemoData = async () => {
 
       console.log('✓ Created demo order');
 
+      // Create demo trip routes
+      const tripDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const tripRandom1 = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+      const tripNumber1 = `TRIP-${tripDate}-${tripRandom1}`;
+
+      // Trip 1: Active trip with order (in_progress)
+      const tripRoute1 = await TripRoute.create({
+        tripNumber: tripNumber1,
+        origin: {
+          address: 'Warehouse Centro Logístico',
+          city: 'Ciudad de México',
+          state: 'CDMX',
+          zipCode: '01000',
+          coordinates: { lat: 19.4326, lng: -99.1332 }
+        },
+        destination: {
+          address: 'Centro de Distribución Norte',
+          city: 'Monterrey',
+          state: 'Nuevo León',
+          zipCode: '64000',
+          coordinates: { lat: 25.6866, lng: -100.3161 }
+        },
+        estimatedDistanceKm: 920.5,
+        estimatedDurationHours: 10.5,
+        driverId: driver1.id,
+        unitId: unit1.id,
+        orderId: order1.id,
+        status: 'in_progress',
+        startedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // Started 2 hours ago
+        metadata: {
+          routeType: 'highway',
+          tollCost: 850,
+          fuelEstimate: 180,
+          weatherConditions: 'clear'
+        },
+        notes: 'Ruta principal CDMX-Monterrey con carga electrónica'
+      }, { transaction });
+
+      // Events for trip 1
+      await TripRouteEvent.create({
+        tripRouteId: tripRoute1.id,
+        eventType: 'status_change',
+        fromStatus: null,
+        toStatus: 'created',
+        description: 'Trip route created',
+        performedByRole: 'system',
+        timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000)
+      }, { transaction });
+
+      await TripRouteEvent.create({
+        tripRouteId: tripRoute1.id,
+        eventType: 'status_change',
+        fromStatus: 'created',
+        toStatus: 'assigned',
+        description: 'Trip assigned to driver and unit',
+        performedByRole: 'employer',
+        timestamp: new Date(Date.now() - 2.5 * 60 * 60 * 1000)
+      }, { transaction });
+
+      await TripRouteEvent.create({
+        tripRouteId: tripRoute1.id,
+        eventType: 'status_change',
+        fromStatus: 'assigned',
+        toStatus: 'in_progress',
+        location: { lat: 19.4326, lng: -99.1332, address: 'Warehouse Centro Logístico' },
+        description: 'Driver started the trip',
+        performedBy: driver1.id,
+        performedByRole: 'driver',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
+      }, { transaction });
+
+      await TripRouteEvent.create({
+        tripRouteId: tripRoute1.id,
+        eventType: 'location_update',
+        location: { lat: 20.5, lng: -99.5, address: 'Autopista México-Querétaro' },
+        description: 'Location update - en route',
+        performedBy: driver1.id,
+        performedByRole: 'driver',
+        timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000)
+      }, { transaction });
+
+      // Trip 2: Repositioning trip without order (completed)
+      const tripRandom2 = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+      const tripNumber2 = `TRIP-${tripDate}-${tripRandom2}`;
+
+      const tripRoute2 = await TripRoute.create({
+        tripNumber: tripNumber2,
+        origin: {
+          address: 'Terminal Guadalajara',
+          city: 'Guadalajara',
+          state: 'Jalisco',
+          coordinates: { lat: 20.6597, lng: -103.3496 }
+        },
+        destination: {
+          address: 'Base Operaciones CDMX',
+          city: 'Ciudad de México',
+          state: 'CDMX',
+          coordinates: { lat: 19.4326, lng: -99.1332 }
+        },
+        estimatedDistanceKm: 540.0,
+        actualDistanceKm: 548.3,
+        estimatedDurationHours: 6.5,
+        actualDurationHours: 7.2,
+        driverId: driver2.id,
+        unitId: unit2.id,
+        orderId: null, // No order - repositioning
+        status: 'completed',
+        startedAt: new Date(Date.now() - 10 * 60 * 60 * 1000),
+        arrivedAt: new Date(Date.now() - 3.5 * 60 * 60 * 1000),
+        completedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
+        metadata: {
+          routeType: 'repositioning',
+          reason: 'Return to base after delivery',
+          tollCost: 450
+        },
+        notes: 'Viaje de reposicionamiento - retorno a base'
+      }, { transaction });
+
+      // Events for trip 2
+      await TripRouteEvent.create({
+        tripRouteId: tripRoute2.id,
+        eventType: 'status_change',
+        fromStatus: null,
+        toStatus: 'created',
+        description: 'Repositioning trip created',
+        performedByRole: 'system',
+        timestamp: new Date(Date.now() - 11 * 60 * 60 * 1000)
+      }, { transaction });
+
+      await TripRouteEvent.create({
+        tripRouteId: tripRoute2.id,
+        eventType: 'status_change',
+        fromStatus: 'created',
+        toStatus: 'assigned',
+        description: 'Trip assigned',
+        performedByRole: 'employer',
+        timestamp: new Date(Date.now() - 10.5 * 60 * 60 * 1000)
+      }, { transaction });
+
+      await TripRouteEvent.create({
+        tripRouteId: tripRoute2.id,
+        eventType: 'status_change',
+        fromStatus: 'assigned',
+        toStatus: 'in_progress',
+        location: { lat: 20.6597, lng: -103.3496, address: 'Terminal Guadalajara' },
+        description: 'Trip started',
+        performedBy: driver2.id,
+        performedByRole: 'driver',
+        timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000)
+      }, { transaction });
+
+      await TripRouteEvent.create({
+        tripRouteId: tripRoute2.id,
+        eventType: 'status_change',
+        fromStatus: 'in_progress',
+        toStatus: 'arrived_at_destination',
+        location: { lat: 19.4326, lng: -99.1332, address: 'Base Operaciones CDMX' },
+        description: 'Arrived at destination',
+        performedBy: driver2.id,
+        performedByRole: 'driver',
+        timestamp: new Date(Date.now() - 3.5 * 60 * 60 * 1000)
+      }, { transaction });
+
+      await TripRouteEvent.create({
+        tripRouteId: tripRoute2.id,
+        eventType: 'status_change',
+        fromStatus: 'arrived_at_destination',
+        toStatus: 'completed',
+        description: 'Trip completed successfully',
+        performedBy: driver2.id,
+        performedByRole: 'driver',
+        timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000)
+      }, { transaction });
+
+      console.log('✓ Created demo trip routes (2 trips with events)');
+
       // Commit transaction
       await transaction.commit();
       
@@ -226,6 +404,10 @@ const seedDemoData = async () => {
       console.log('🚚 Units: 2 (TRK-001-MX, TRK-002-MX)');
       console.log('📄 Documents: 8 (4 per driver/unit)');
       console.log('📦 Orders: 1 (pending order CDMX → Monterrey)');
+      console.log('🚗 Trip Routes: 2 trips');
+      console.log('   - Trip 1: In progress (CDMX → Monterrey, with order)');
+      console.log('   - Trip 2: Completed (Guadalajara → CDMX, repositioning)');
+      console.log('📊 Trip Events: 11 events total (status changes + location updates)');
       console.log('\n🔑 Demo credentials:');
       console.log('   Email: client@truckmatch.com / admin@truckmatch.com');
       console.log('   Password: demo123');

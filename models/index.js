@@ -8,6 +8,8 @@ const Driver = require('./driver');
 const Document = require('./document');
 const Order = require('./order');
 const Assignment = require('./assignment');
+const TripRoute = require('./tripRoute');
+const TripRouteEvent = require('./tripRouteEvent');
 
 // Define relationships
 // Driver-Unit relationship (one driver can have multiple units)
@@ -56,6 +58,20 @@ Document.belongsTo(Unit, {
   as: 'unit' 
 });
 
+// TripRoute relationships
+Driver.hasMany(TripRoute, { foreignKey: 'driverId', as: 'tripRoutes' });
+TripRoute.belongsTo(Driver, { foreignKey: 'driverId', as: 'driver' });
+
+Unit.hasMany(TripRoute, { foreignKey: 'unitId', as: 'tripRoutes' });
+TripRoute.belongsTo(Unit, { foreignKey: 'unitId', as: 'unit' });
+
+Order.hasMany(TripRoute, { foreignKey: 'orderId', as: 'tripRoutes' });
+TripRoute.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+
+// TripRouteEvent relationships
+TripRoute.hasMany(TripRouteEvent, { foreignKey: 'tripRouteId', as: 'events' });
+TripRouteEvent.belongsTo(TripRoute, { foreignKey: 'tripRouteId', as: 'tripRoute' });
+
 // Export all models and sequelize instance
 module.exports = {
   sequelize,
@@ -65,6 +81,8 @@ module.exports = {
   Document,
   Order,
   Assignment,
+  TripRoute,
+  TripRouteEvent,
 };
 
 // Function to sync all models
