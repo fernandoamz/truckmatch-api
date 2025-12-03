@@ -8,6 +8,11 @@ const {
   Order,
   TripRoute,
   TripRouteEvent,
+  Tracking,
+  Notification,
+  Billing,
+  Payment,
+  FleetMaintenance,
   sequelize 
 } = require('../models');
 
@@ -394,6 +399,102 @@ const seedDemoData = async () => {
 
       console.log('✓ Created demo trip routes (2 trips with events)');
 
+      // Create Tracking data (GPS locations)
+      await Tracking.create({
+        tripRouteId: tripRoute1.id,
+        latitude: 19.4326,
+        longitude: -99.1332,
+        address: 'Paseo de la Reforma, Mexico City',
+        speed: 85,
+        accuracy: 5,
+        userId: driver1.id
+      }, { transaction });
+
+      await Tracking.create({
+        tripRouteId: tripRoute1.id,
+        latitude: 22.5597,
+        longitude: -101.2562,
+        address: 'Querétaro City',
+        speed: 95,
+        accuracy: 5,
+        userId: driver1.id
+      }, { transaction });
+
+      console.log('✓ Created Tracking data (GPS locations)');
+
+      // Create Notifications
+      await Promise.all([
+        Notification.create({
+          userId: demoClient.id,
+          type: 'trip_status',
+          title: 'Trip Started',
+          message: 'Trip CDMX → Monterrey has been started',
+          relatedId: tripRoute1.id,
+          relatedType: 'TripRoute',
+          isRead: false
+        }, { transaction }),
+        Notification.create({
+          userId: demoClient.id,
+          type: 'order_update',
+          title: 'Order Assigned',
+          message: 'Your order has been assigned to a driver',
+          relatedId: order1.id,
+          relatedType: 'Order',
+          isRead: false
+        }, { transaction })
+      ]);
+
+      console.log('✓ Created Notifications');
+
+      // Create Billing records
+      const billing1 = await Billing.create({
+        orderId: order1.id,
+        totalAmount: order1.rate || 5000,
+        status: 'sent',
+        invoiceNumber: 'INV-2025-001',
+        issueDate: new Date(),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      }, { transaction });
+
+      // Create Payment record
+      await Payment.create({
+        billingId: billing1.id,
+        amount: 2500,
+        paymentMethod: 'bank_transfer',
+        referenceNumber: 'TRANSFER-2025-001',
+        status: 'completed'
+      }, { transaction });
+
+      console.log('✓ Created Billing and Payment records');
+
+      // Create FleetMaintenance records
+      await Promise.all([
+        FleetMaintenance.create({
+          unitId: unit1.id,
+          type: 'oil_change',
+          description: 'Oil and filter change',
+          cost: 800,
+          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+          nextMaintenanceDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+          notes: 'Scheduled maintenance'
+        }, { transaction }),
+        FleetMaintenance.create({
+          unitId: unit1.id,
+          type: 'fuel_log',
+          description: 'Fuel log: 300L at Monterrey Gas Station',
+          cost: 6300,
+          date: new Date(),
+          metadata: {
+            liters: 300,
+            odometer: 50000,
+            location: 'Monterrey Gas Station',
+            pricePerLiter: '21'
+          }
+        }, { transaction })
+      ]);
+
+      console.log('✓ Created Fleet Maintenance data');
+
       // Commit transaction
       await transaction.commit();
       
@@ -407,7 +508,11 @@ const seedDemoData = async () => {
       console.log('🚗 Trip Routes: 2 trips');
       console.log('   - Trip 1: In progress (CDMX → Monterrey, with order)');
       console.log('   - Trip 2: Completed (Guadalajara → CDMX, repositioning)');
-      console.log('📊 Trip Events: 11 events total (status changes + location updates)');
+      console.log('📊 Trip Events: 11 events total');
+      console.log('🗺️  Tracking: 2 GPS location points');
+      console.log('🔔 Notifications: 2 notifications');
+      console.log('💰 Billing: 1 invoice + 1 payment');
+      console.log('🔧 Fleet Maintenance: 1 oil change + 1 fuel log');
       console.log('\n🔑 Demo credentials:');
       console.log('   Email: client@truckmatch.com / admin@truckmatch.com');
       console.log('   Password: demo123');

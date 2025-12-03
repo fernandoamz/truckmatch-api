@@ -18,6 +18,11 @@ const documentRoutes = require('./routes/documents');
 const orderRoutes = require('./routes/orders');
 const assignmentRoutes = require('./routes/assignments');
 const tripRouteRoutes = require('./routes/trip-routes');
+const trackingRoutes = require('./routes/tracking');
+const notificationRoutes = require('./routes/notifications');
+const billingRoutes = require('./routes/billing');
+const reportRoutes = require('./routes/reports');
+const fleetRoutes = require('./routes/fleet');
 
 // Import database
 const { sequelize, syncModels } = require('./models');
@@ -159,6 +164,51 @@ try {
   console.log('Mounted /api/trip-routes OK');
 } catch (e) {
   console.error('Error mounting /api/trip-routes:', e && e.stack ? e.stack : e);
+  throw e;
+}
+
+try {
+  console.log('Mounting /api/tracking routes');
+  app.use('/api/tracking', trackingRoutes);
+  console.log('Mounted /api/tracking OK');
+} catch (e) {
+  console.error('Error mounting /api/tracking:', e && e.stack ? e.stack : e);
+  throw e;
+}
+
+try {
+  console.log('Mounting /api/notifications routes');
+  app.use('/api/notifications', notificationRoutes);
+  console.log('Mounted /api/notifications OK');
+} catch (e) {
+  console.error('Error mounting /api/notifications:', e && e.stack ? e.stack : e);
+  throw e;
+}
+
+try {
+  console.log('Mounting /api/billing routes');
+  app.use('/api/billing', billingRoutes);
+  console.log('Mounted /api/billing OK');
+} catch (e) {
+  console.error('Error mounting /api/billing:', e && e.stack ? e.stack : e);
+  throw e;
+}
+
+try {
+  console.log('Mounting /api/reports routes');
+  app.use('/api/reports', reportRoutes);
+  console.log('Mounted /api/reports OK');
+} catch (e) {
+  console.error('Error mounting /api/reports:', e && e.stack ? e.stack : e);
+  throw e;
+}
+
+try {
+  console.log('Mounting /api/fleet routes');
+  app.use('/api/fleet', fleetRoutes);
+  console.log('Mounted /api/fleet OK');
+} catch (e) {
+  console.error('Error mounting /api/fleet:', e && e.stack ? e.stack : e);
   throw e;
 }
 

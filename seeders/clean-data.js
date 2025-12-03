@@ -6,6 +6,13 @@ const {
   Document, 
   Order,
   Assignment,
+  TripRoute,
+  TripRouteEvent,
+  Tracking,
+  Notification,
+  Billing,
+  Payment,
+  FleetMaintenance,
   sequelize 
 } = require('../models');
 
@@ -18,6 +25,47 @@ const cleanData = async () => {
 
     try {
       // Delete in correct order (respecting foreign key constraints)
+      
+      // Delete payments first (references billing)
+      const deletedPayments = await Payment.destroy({ 
+        where: {},
+        truncate: false,
+        transaction 
+      });
+      console.log(`✓ Deleted ${deletedPayments} payments`);
+
+      // Delete billing (references orders)
+      const deletedBilling = await Billing.destroy({ 
+        where: {},
+        truncate: false,
+        transaction 
+      });
+      console.log(`✓ Deleted ${deletedBilling} billing records`);
+
+      // Delete notifications (references users)
+      const deletedNotifications = await Notification.destroy({ 
+        where: {},
+        truncate: false,
+        transaction 
+      });
+      console.log(`✓ Deleted ${deletedNotifications} notifications`);
+
+      // Delete tracking (references trip routes)
+      const deletedTracking = await Tracking.destroy({ 
+        where: {},
+        truncate: false,
+        transaction 
+      });
+      console.log(`✓ Deleted ${deletedTracking} tracking records`);
+
+      // Delete fleet maintenance (references units)
+      const deletedMaintenance = await FleetMaintenance.destroy({ 
+        where: {},
+        truncate: false,
+        transaction 
+      });
+      console.log(`✓ Deleted ${deletedMaintenance} fleet maintenance records`);
+
       // Delete assignments first (references orders, drivers, units)
       const deletedAssignments = await Assignment.destroy({ 
         where: {},
@@ -27,7 +75,7 @@ const cleanData = async () => {
       console.log(`✓ Deleted ${deletedAssignments} assignments`);
 
       // Delete trip route events first (references trip routes)
-      const deletedEvents = await require('../models').TripRouteEvent.destroy({ 
+      const deletedEvents = await TripRouteEvent.destroy({ 
         where: {},
         truncate: false,
         transaction 
@@ -35,7 +83,7 @@ const cleanData = async () => {
       console.log(`✓ Deleted ${deletedEvents} trip route events`);
 
       // Delete trip routes (references orders, drivers, units)
-      const deletedTripRoutes = await require('../models').TripRoute.destroy({ 
+      const deletedTripRoutes = await TripRoute.destroy({ 
         where: {},
         truncate: false,
         transaction 
@@ -87,6 +135,11 @@ const cleanData = async () => {
       
       console.log('🎉 Database cleaned successfully!');
       console.log('\n📋 Cleanup Summary:');
+      console.log(`   Payments: ${deletedPayments}`);
+      console.log(`   Billing Records: ${deletedBilling}`);
+      console.log(`   Notifications: ${deletedNotifications}`);
+      console.log(`   Tracking Records: ${deletedTracking}`);
+      console.log(`   Fleet Maintenance: ${deletedMaintenance}`);
       console.log(`   Assignments: ${deletedAssignments}`);
       console.log(`   Trip Route Events: ${deletedEvents}`);
       console.log(`   Trip Routes: ${deletedTripRoutes}`);
@@ -112,6 +165,7 @@ if (require.main === module) {
   const { syncModels } = require('../models');
   
   sequelize.authenticate()
+    .then(() => syncModels())
     .then(() => cleanData())
     .then(() => {
       console.log('✓ Cleanup completed');
