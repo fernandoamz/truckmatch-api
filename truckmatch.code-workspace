@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Backend API"
+    },
+    {
+      "path": "../truckmatch-frontend",
+      "name": "Frontend"
+    }
+  ],
+  "settings": {
+    "typescript.tsdk": "./node_modules/typescript/lib"
+  }
+}

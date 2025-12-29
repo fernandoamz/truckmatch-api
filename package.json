@@ -9,7 +9,11 @@
     "seed": "node seeders/demo-data.js",
     "seed:demo": "node seeders/demo-data.js",
     "seed:clean": "node seeders/clean-data.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --forceExit --runInBand",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage --forceExit --runInBand",
+    "test:setup": "npm run seed:clean && npm run seed:demo",
+    "setup:test-db": "node scripts/setup-test-db.js",
     "docker:build": "docker-compose build",
     "docker:dev": "docker-compose --profile dev up -d",
     "docker:prod": "docker-compose up -d truckmatch-api postgres",
@@ -41,6 +45,8 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
   }
 }
